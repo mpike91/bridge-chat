@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Chat bubble left (app user) -->
+  <path d="M80 180 h140 a20 20 0 0 1 20 20 v100 a20 20 0 0 1 -20 20 h-100 l-40 40 v-40 a20 20 0 0 1 -20 -20 v-100 a20 20 0 0 1 20 -20 z" fill="white" opacity="0.95"/>
+  <!-- Chat bubble right (SMS) -->
+  <path d="M292 220 h140 a20 20 0 0 1 20 20 v100 a20 20 0 0 1 -20 20 v40 l-40 -40 h-100 a20 20 0 0 1 -20 -20 v-100 a20 20 0 0 1 20 -20 z" fill="white" opacity="0.95"/>
+  <!-- Bridge/connection line -->
+  <path d="M220 260 L292 260" stroke="white" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+  <path d="M220 290 L292 290" stroke="white" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+  <!-- SMS indicator dots -->
+  <circle cx="340" cy="285" r="8" fill="#3b82f6"/>
+  <circle cx="370" cy="285" r="8" fill="#3b82f6"/>
+  <circle cx="400" cy="285" r="8" fill="#3b82f6"/>
+</svg>

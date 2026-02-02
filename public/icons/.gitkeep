@@ -1,0 +1,20 @@
+# PWA Icons
+
+This directory contains PWA icons for BridgeChat.
+
+## Current Icons (SVG)
+- icon.svg - Main app icon (scalable)
+- icon-maskable.svg - Maskable icon for Android adaptive icons
+
+## Optional: Generate PNG Icons
+For maximum compatibility, you can generate PNG versions using:
+- https://realfavicongenerator.net
+- https://www.pwabuilder.com/imageGenerator
+- Figma/Sketch export
+
+Recommended sizes:
+- icon-192.png (192x192)
+- icon-512.png (512x512)
+- icon-maskable-192.png (192x192, with safe area padding)
+- icon-maskable-512.png (512x512, with safe area padding)
+- badge-72.png (72x72, for notification badges)

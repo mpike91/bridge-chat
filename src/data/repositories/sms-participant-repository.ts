@@ -110,7 +110,8 @@ export class SmsParticipantRepository {
 
   /**
    * Find or create an SMS participant by phone number.
-   * If the participant exists, returns it. Otherwise creates a new one.
+   * If the participant exists, updates the display name if different and returns it.
+   * Otherwise creates a new one.
    */
   async findOrCreate(input: {
     phoneNumber: E164PhoneNumber;
@@ -120,6 +121,11 @@ export class SmsParticipantRepository {
     // First try to find existing
     const existing = await this.getByPhoneNumber(input.phoneNumber);
     if (existing) {
+      // Update display name if different
+      if (existing.displayName !== input.displayName) {
+        const updated = await this.update(existing.id, { displayName: input.displayName });
+        return { participant: updated, created: false };
+      }
       return { participant: existing, created: false };
     }
 

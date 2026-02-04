@@ -4,7 +4,9 @@
       "Bash(ls:*)",
       "Bash(cmd //c \"ngrok version\")",
       "Bash(cmd //c \"where /r C:\\\\Users\\\\Matt ngrok.exe 2>nul || dir /s /b C:\\\\Users\\\\Matt\\\\AppData\\\\Local\\\\ngrok* 2>nul\")",
-      "Bash(cmd //c \"C:\\\\Users\\\\Matt\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Ngrok.Ngrok_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ngrok.exe version\")"
+      "Bash(cmd //c \"C:\\\\Users\\\\Matt\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Ngrok.Ngrok_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ngrok.exe version\")",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 15 npm run dev:*)"
     ]
   }
 }

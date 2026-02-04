@@ -185,10 +185,15 @@ export class GroupRepository {
    */
   async update(
     id: GroupId,
-    updates: { name?: string }
+    updates: { name?: string; twilioPhoneNumber?: string }
   ): Promise<Group> {
     // Type assertion needed because Supabase types infer 'never' due to RLS policies
-    const updateData: Updates<"groups"> = { name: updates.name };
+    const updateData: Updates<"groups"> = {};
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.twilioPhoneNumber !== undefined) {
+      updateData.twilio_phone_number = updates.twilioPhoneNumber;
+    }
+
     const { data: rawData, error } = await this.supabase
       .from("groups")
       .update(updateData as unknown as never)

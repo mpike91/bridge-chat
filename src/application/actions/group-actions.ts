@@ -73,20 +73,39 @@ export async function createGroup(formData: FormData): Promise<GroupResult> {
 }
 
 /**
- * Update a group's details.
+ * Update a group's details (including Twilio number).
  */
 export async function updateGroup(
   groupId: string,
   formData: FormData
 ): Promise<GroupResult> {
-  await requireAuth();
+  const user = await requireAuth();
   const supabase = await createServerSupabaseClient();
   const groupRepo = new GroupRepository(supabase);
 
+  // Check ownership for Twilio number changes
+  const role = await groupRepo.getUserRole(asGroupId(groupId), asUserId(user.id));
+  if (role !== "owner" && role !== "admin") {
+    return { success: false, error: "Only group owners can update group settings" };
+  }
+
   const name = formData.get("name") as string;
+  const twilioNumber = formData.get("twilioPhoneNumber") as string | null;
+
+  const updates: { name?: string; twilioPhoneNumber?: string } = {};
+  if (name) updates.name = name;
+
+  // Validate and add Twilio number if provided
+  if (twilioNumber) {
+    const phoneResult = normalizeToE164(twilioNumber);
+    if (!phoneResult.success) {
+      return { success: false, error: phoneResult.error };
+    }
+    updates.twilioPhoneNumber = phoneResult.value;
+  }
 
   try {
-    const group = await groupRepo.update(asGroupId(groupId), { name });
+    const group = await groupRepo.update(asGroupId(groupId), updates);
 
     revalidatePath(`/chats/${groupId}`);
     revalidatePath("/chats");
@@ -94,6 +113,10 @@ export async function updateGroup(
     return { success: true, group };
   } catch (error) {
     console.error("Update group error:", error);
+    // Handle unique constraint violation for Twilio number
+    if (error instanceof Error && error.message.includes("unique")) {
+      return { success: false, error: "This Twilio number is already in use by another group" };
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to update group",
@@ -251,4 +274,162 @@ export async function getMyGroups(): Promise<Group[]> {
   const groupRepo = new GroupRepository(supabase);
 
   return groupRepo.getMyGroups();
+}
+
+/**
+ * Search for app users that can be added to a group.
+ * Returns users not already in the group.
+ */
+export async function searchUsersToAdd(
+  groupId: string,
+  searchTerm: string
+): Promise<{
+  success: boolean;
+  users?: Array<{ id: string; email: string; displayName: string }>;
+  error?: string;
+}> {
+  const user = await requireAuth();
+  const supabase = await createServerSupabaseClient();
+  const groupRepo = new GroupRepository(supabase);
+
+  // Check caller has permission to add members
+  const role = await groupRepo.getUserRole(asGroupId(groupId), asUserId(user.id));
+  if (role !== "owner" && role !== "admin") {
+    return { success: false, error: "Only owners and admins can add members" };
+  }
+
+  try {
+    // Get existing member user IDs
+    const members = await groupRepo.getMembers(asGroupId(groupId));
+    const existingUserIds = members
+      .filter((m) => m.participant.kind === "app_user")
+      .map((m) => m.participant.id);
+
+    // Search profiles excluding existing members
+    let query = supabase
+      .from("profiles")
+      .select("id, email, display_name")
+      .limit(10);
+
+    if (searchTerm) {
+      query = query.or(
+        `email.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`
+      );
+    }
+
+    if (existingUserIds.length > 0) {
+      query = query.not("id", "in", `(${existingUserIds.join(",")})`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    // Type assertion needed due to Supabase RLS type inference
+    const rows = (data || []) as Array<{
+      id: string;
+      email: string;
+      display_name: string;
+    }>;
+
+    const users = rows.map((row) => ({
+      id: row.id,
+      email: row.email,
+      displayName: row.display_name,
+    }));
+
+    return { success: true, users };
+  } catch (error) {
+    console.error("Search users error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to search users",
+    };
+  }
+}
+
+/**
+ * Add an app user to a group.
+ */
+export async function addAppUserToGroup(
+  groupId: string,
+  userIdToAdd: string
+): Promise<GroupMemberResult> {
+  const user = await requireAuth();
+  const supabase = await createServerSupabaseClient();
+  const groupRepo = new GroupRepository(supabase);
+
+  // Check caller has permission
+  const role = await groupRepo.getUserRole(asGroupId(groupId), asUserId(user.id));
+  if (role !== "owner" && role !== "admin") {
+    return { success: false, error: "Only owners and admins can add members" };
+  }
+
+  try {
+    await groupRepo.addUser(asGroupId(groupId), asUserId(userIdToAdd), "member");
+
+    revalidatePath(`/chats/${groupId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Add app user error:", error);
+    // Handle duplicate member
+    if (error instanceof Error && error.message.includes("duplicate")) {
+      return { success: false, error: "User is already a member of this group" };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add user",
+    };
+  }
+}
+
+/**
+ * Remove a member (app user or SMS participant) from a group.
+ */
+export async function removeMemberFromGroup(
+  groupId: string,
+  memberId: string,
+  memberType: "app_user" | "sms_participant"
+): Promise<GroupMemberResult> {
+  const user = await requireAuth();
+  const supabase = await createServerSupabaseClient();
+  const groupRepo = new GroupRepository(supabase);
+
+  // Check caller has permission
+  const role = await groupRepo.getUserRole(asGroupId(groupId), asUserId(user.id));
+  if (role !== "owner" && role !== "admin") {
+    return { success: false, error: "Only owners and admins can remove members" };
+  }
+
+  // Prevent owner from removing themselves
+  if (memberType === "app_user" && memberId === user.id) {
+    return { success: false, error: "You cannot remove yourself from the group" };
+  }
+
+  // Prevent removing other owners (only owners can remove, but can't remove each other)
+  if (memberType === "app_user") {
+    const memberRole = await groupRepo.getUserRole(asGroupId(groupId), asUserId(memberId));
+    if (memberRole === "owner") {
+      return { success: false, error: "Cannot remove the group owner" };
+    }
+  }
+
+  try {
+    if (memberType === "app_user") {
+      await groupRepo.removeUser(asGroupId(groupId), asUserId(memberId));
+    } else {
+      await groupRepo.removeSmsParticipant(asGroupId(groupId), asSmsParticipantId(memberId));
+    }
+
+    revalidatePath(`/chats/${groupId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Remove member error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to remove member",
+    };
+  }
 }

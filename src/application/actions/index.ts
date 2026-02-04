@@ -23,6 +23,9 @@ export {
   leaveGroup,
   getGroupWithMembers,
   getMyGroups,
+  searchUsersToAdd,
+  addAppUserToGroup,
+  removeMemberFromGroup,
 } from "./group-actions";
 export type { GroupResult, GroupMemberResult } from "./group-actions";
 

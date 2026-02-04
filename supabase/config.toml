@@ -63,3 +63,9 @@ ip_version = "IPv6"
 enabled = false
 port = 54327
 backend = "postgres"
+
+[functions.twilio-webhook]
+verify_jwt = false
+
+[functions.twilio-status]
+verify_jwt = false

@@ -133,6 +133,12 @@ export async function POST(request: NextRequest) {
         formData.append("From", group.twilio_phone_number);
         formData.append("Body", smsBody);
 
+        // Add status callback URL if configured (for delivery status updates)
+        const statusCallbackUrl = process.env.TWILIO_STATUS_CALLBACK_URL;
+        if (statusCallbackUrl) {
+          formData.append("StatusCallback", statusCallbackUrl);
+        }
+
         const twilioResponse = await fetch(twilioUrl, {
           method: "POST",
           headers: {

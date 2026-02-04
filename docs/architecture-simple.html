@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BridgeChat - How It Works</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --purple: #a855f7;
+            --orange: #f97316;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle { color: var(--muted); font-size: 1.2rem; }
+
+        .section {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--blue);
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        h3 {
+            color: var(--green);
+            margin: 1.5rem 0 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        p { margin-bottom: 1rem; color: var(--muted); }
+        p strong { color: var(--text); }
+
+        .mermaid {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box {
+            background: var(--bg);
+            border-left: 4px solid var(--blue);
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .highlight-box.green { border-color: var(--green); }
+        .highlight-box.purple { border-color: var(--purple); }
+        .highlight-box.orange { border-color: var(--orange); }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 600px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        .col {
+            background: var(--bg);
+            padding: 1.25rem;
+            border-radius: 8px;
+        }
+
+        .col h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .col.app h4 { color: var(--blue); }
+        .col.sms h4 { color: var(--green); }
+
+        .col ul {
+            list-style: none;
+            color: var(--muted);
+        }
+
+        .col li {
+            padding: 0.3rem 0;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+
+        .col li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--border);
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .step-num {
+            background: var(--blue);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content { flex: 1; }
+        .step-content strong { color: var(--text); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BridgeChat</h1>
+            <p class="subtitle">A messaging app that connects app users with SMS contacts</p>
+        </header>
+
+        <section class="section">
+            <h2>The Big Picture</h2>
+            <p>
+                <strong>BridgeChat solves a simple problem:</strong> How do you have a group chat when some people use your app and others only have SMS?
+            </p>
+            <div class="mermaid">
+flowchart LR
+    subgraph YourApp["Your App"]
+        U1["👤 App User 1"]
+        U2["👤 App User 2"]
+    end
+
+    subgraph Bridge["BridgeChat"]
+        G["💬 Group Chat"]
+    end
+
+    subgraph SMS["SMS World"]
+        S1["📱 Mom's Phone"]
+        S2["📱 Friend's Phone"]
+    end
+
+    U1 <--> G
+    U2 <--> G
+    G <-->|"via Twilio"| S1
+    G <-->|"via Twilio"| S2
+            </div>
+            <div class="highlight-box">
+                <strong>The "bridge":</strong> App users send messages through the app. Those messages get forwarded as SMS texts to people who aren't using the app. When those SMS contacts reply, their texts appear in the app for everyone to see.
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Two Types of People</h2>
+            <div class="two-col">
+                <div class="col app">
+                    <h4>App Users</h4>
+                    <ul>
+                        <li>Sign up with email/password</li>
+                        <li>Use the web app to chat</li>
+                        <li>See messages instantly (realtime)</li>
+                        <li>Can create groups</li>
+                        <li>Can add SMS contacts</li>
+                    </ul>
+                </div>
+                <div class="col sms">
+                    <h4>SMS Participants</h4>
+                    <ul>
+                        <li>Just a phone number</li>
+                        <li>No app, no account needed</li>
+                        <li>Receive messages as texts</li>
+                        <li>Reply via normal SMS</li>
+                        <li>Added by app users</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>How Messages Flow</h2>
+
+            <h3>When an App User Sends a Message</h3>
+            <div class="mermaid">
+flowchart LR
+    A["👤 App User<br/>types message"] --> B["💾 Saved to<br/>database"]
+    B --> C{"Has SMS<br/>members?"}
+    C -->|Yes| D["📤 Twilio sends<br/>SMS to each"]
+    C -->|No| E["✅ Done"]
+    D --> E
+    B --> F["⚡ Realtime<br/>updates app"]
+            </div>
+
+            <h3>When an SMS Contact Replies</h3>
+            <div class="mermaid">
+flowchart LR
+    A["📱 SMS Contact<br/>sends text"] --> B["📥 Twilio<br/>receives it"]
+    B --> C["🔍 Find the<br/>right group"]
+    C --> D["💾 Save to<br/>database"]
+    D --> E["⚡ Push to<br/>all app users"]
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>The Key Parts</h2>
+
+            <div class="highlight-box">
+                <strong>Supabase</strong> - The backend. Stores all the data (users, groups, messages) and handles login. Also pushes realtime updates to the app when new messages arrive.
+            </div>
+
+            <div class="highlight-box green">
+                <strong>Twilio</strong> - The SMS service. Each group gets its own phone number. When app users send messages, Twilio texts them to SMS contacts. When SMS contacts reply to that number, Twilio forwards it back to your app.
+            </div>
+
+            <div class="highlight-box purple">
+                <strong>Next.js</strong> - The web framework. Renders the chat UI and handles the logic for sending messages, creating groups, etc.
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Data Structure (Simplified)</h2>
+            <div class="mermaid">
+flowchart TB
+    subgraph Users["Users"]
+        P["👤 Profiles<br/>(app users)"]
+        S["📱 SMS Participants<br/>(phone contacts)"]
+    end
+
+    subgraph Groups["Groups"]
+        G["💬 Group<br/>(has a Twilio phone #)"]
+    end
+
+    subgraph Messages["Messages"]
+        M["💬 Messages<br/>(tracks who sent it)"]
+    end
+
+    P --> G
+    S --> G
+    G --> M
+    P -.->|"sends app messages"| M
+    S -.->|"sends SMS messages"| M
+            </div>
+
+            <div class="highlight-box orange">
+                <strong>Key insight:</strong> Messages know whether they came from the app or from SMS. This lets the UI show them differently and handle delivery status for outgoing SMS.
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Example Walkthrough</h2>
+
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <strong>Alice creates a group called "Family Chat"</strong><br>
+                    The group gets assigned a Twilio phone number: +1-555-123-4567
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <strong>Alice adds her mom as an SMS participant</strong><br>
+                    Mom doesn't need the app - Alice just enters her phone number
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <strong>Alice sends "Hey mom!"</strong><br>
+                    The message saves to the database, then Twilio sends an SMS to mom: "Alice: Hey mom!"
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <strong>Mom replies via text: "Hi sweetie!"</strong><br>
+                    Twilio receives it, looks up which group uses that phone number, and saves it. Alice sees it instantly in the app.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-content">
+                    <strong>Bob (another app user) joins the group</strong><br>
+                    He can see the full chat history including mom's SMS messages, and when he sends messages, mom gets them too.
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Tech Stack at a Glance</h2>
+            <div class="mermaid">
+flowchart TB
+    subgraph Frontend["Frontend (What users see)"]
+        N["Next.js + React"]
+        T["Tailwind CSS"]
+    end
+
+    subgraph Backend["Backend (Behind the scenes)"]
+        SB["Supabase<br/>Database + Auth + Realtime"]
+        TW["Twilio<br/>SMS Gateway"]
+    end
+
+    N <--> SB
+    SB <--> TW
+            </div>
+        </section>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#f1f5f9',
+                primaryBorderColor: '#475569',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#334155',
+                background: '#1e293b',
+                mainBkg: '#334155',
+                nodeBorder: '#475569',
+                clusterBkg: '#1e293b',
+                clusterBorder: '#475569'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

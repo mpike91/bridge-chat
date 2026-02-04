@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BridgeChat Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --border: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .section h2 {
+            color: var(--accent-blue);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: var(--accent-blue);
+            border-radius: 2px;
+        }
+
+        .mermaid {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card li {
+            padding: 0.4rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card li:last-child {
+            border-bottom: none;
+        }
+
+        .card li strong {
+            color: var(--text-primary);
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .tech-badge {
+            background: var(--bg-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+        }
+
+        .tech-badge.frontend { border-color: var(--accent-blue); }
+        .tech-badge.backend { border-color: var(--accent-green); }
+        .tech-badge.pattern { border-color: var(--accent-purple); }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            background: var(--bg-card);
+            color: var(--accent-blue);
+        }
+
+        .comparison-table tr:hover {
+            background: var(--bg-card);
+        }
+
+        .nav {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .nav a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.3rem 0;
+            font-size: 0.85rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent-blue);
+        }
+
+        @media (max-width: 1200px) {
+            .nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <strong style="color: var(--text-primary);">Jump to</strong>
+        <a href="#architecture">System Architecture</a>
+        <a href="#send-flow">Send Message Flow</a>
+        <a href="#receive-flow">Receive SMS Flow</a>
+        <a href="#database">Database Schema</a>
+        <a href="#layers">Architecture Layers</a>
+        <a href="#tech">Tech Stack</a>
+        <a href="#participants">Participant Types</a>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>BridgeChat Architecture</h1>
+            <p>A messaging app that bridges app users and SMS participants seamlessly</p>
+        </header>
+
+        <section id="architecture" class="section">
+            <h2>System Architecture Overview</h2>
+            <div class="mermaid">
+flowchart TB
+    subgraph Clients["Clients"]
+        WebApp["Web Browser (PWA)<br/>React 19 / Next.js 15"]
+        SMSPhone["SMS Phone<br/>External Participants"]
+    end
+
+    subgraph NextJS["Next.js API Layer"]
+        ServerActions["Server Actions<br/>sendMessage()<br/>createGroup()"]
+        APIRoutes["API Routes<br/>POST /api/send-sms"]
+    end
+
+    subgraph Supabase["Supabase Backend"]
+        PostgreSQL[("PostgreSQL 15<br/>+ Row Level Security")]
+        Auth["Auth Service<br/>JWT Tokens"]
+        Realtime["Realtime Service<br/>WebSocket"]
+        EdgeFunctions["Edge Functions<br/>twilio-webhook<br/>send-sms<br/>twilio-status"]
+    end
+
+    Twilio["Twilio SMS Gateway"]
+
+    WebApp --> ServerActions
+    WebApp <--> Realtime
+    ServerActions --> PostgreSQL
+    APIRoutes --> PostgreSQL
+    APIRoutes --> Twilio
+    EdgeFunctions --> PostgreSQL
+    EdgeFunctions <--> Twilio
+    SMSPhone <--> Twilio
+    Auth --> PostgreSQL
+            </div>
+        </section>
+
+        <section id="send-flow" class="section">
+            <h2>Data Flow: App User Sends Message</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant User as App User
+    participant UI as MessageInput
+    participant Hook as useSendMessage
+    participant Action as Server Action
+    participant DB as PostgreSQL
+    participant RT as Realtime
+    participant API as /api/send-sms
+    participant TW as Twilio
+    participant SMS as SMS Participant
+
+    User->>UI: Types message & submits
+    UI->>Hook: handleSend(content)
+    Hook->>Action: sendMessage()
+    Action->>Action: Validate & Sanitize
+    Action->>DB: INSERT message (origin='app', status='pending')
+    DB-->>RT: postgres_changes INSERT event
+    RT-->>UI: New message appears
+
+    alt Group has SMS participants
+        Action->>API: POST /api/send-sms
+        loop For each SMS participant
+            API->>TW: Send SMS
+            TW-->>SMS: Delivers SMS
+            TW-->>API: Return SID & status
+        end
+        API->>DB: UPDATE delivery_status
+        DB-->>RT: postgres_changes UPDATE event
+        RT-->>UI: Status indicator updates
+    else No SMS participants
+        Action->>DB: UPDATE status='delivered'
+    end
+            </div>
+        </section>
+
+        <section id="receive-flow" class="section">
+            <h2>Data Flow: Inbound SMS from External Participant</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant Phone as External Phone
+    participant TW as Twilio
+    participant WH as twilio-webhook<br/>(Edge Function)
+    participant DB as PostgreSQL
+    participant RT as Realtime
+    participant App as App Users
+
+    Phone->>TW: Sends SMS to group's Twilio number
+    TW->>WH: POST webhook (From, To, Body)
+    WH->>WH: Validate Twilio signature
+    WH->>DB: Lookup group by twilio_phone_number
+    WH->>DB: Find/create sms_participant by phone
+    WH->>DB: INSERT message (origin='sms', twilio_sid)
+    Note over WH,DB: Uses service role (bypasses RLS)
+    DB-->>RT: postgres_changes INSERT event
+    RT-->>App: All group members see message instantly
+            </div>
+        </section>
+
+        <section id="database" class="section">
+            <h2>Database Entity Relationships</h2>
+            <div class="mermaid">
+erDiagram
+    profiles ||--o{ groups : creates
+    profiles ||--o{ sms_participants : creates
+    profiles ||--o{ group_members : joins
+    sms_participants ||--o{ group_members : joins
+    groups ||--o{ group_members : has
+    groups ||--o{ messages : contains
+    profiles ||--o{ messages : "sends (app)"
+    sms_participants ||--o{ messages : "sends (sms)"
+
+    profiles {
+        uuid id PK
+        string email UK
+        string display_name
+        string phone_number UK
+        string avatar_url
+        timestamp created_at
+    }
+
+    sms_participants {
+        uuid id PK
+        string phone_number
+        string display_name
+        uuid created_by_user_id FK
+        timestamp created_at
+    }
+
+    groups {
+        uuid id PK
+        string name
+        string twilio_phone_number UK
+        uuid created_by_user_id FK
+        timestamp created_at
+    }
+
+    group_members {
+        uuid id PK
+        uuid group_id FK
+        uuid user_id FK "nullable"
+        uuid sms_participant_id FK "nullable"
+        enum role "owner|admin|member"
+        timestamp joined_at
+    }
+
+    messages {
+        uuid id PK
+        uuid group_id FK
+        enum origin "app|sms"
+        text content
+        uuid sender_user_id FK "if origin=app"
+        uuid sender_sms_participant_id FK "if origin=sms"
+        string twilio_message_sid
+        enum delivery_status
+        timestamp created_at
+    }
+            </div>
+            <div class="grid">
+                <div class="card">
+                    <h3>Key Constraints</h3>
+                    <ul>
+                        <li><strong>chk_member_type:</strong> Exactly one of user_id OR sms_participant_id must be set</li>
+                        <li><strong>chk_sender_type:</strong> Sender field must match message origin</li>
+                        <li><strong>chk_sms_has_sid:</strong> SMS-origin messages require twilio_message_sid</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Key Indexes</h3>
+                    <ul>
+                        <li><strong>idx_groups_twilio_phone:</strong> Fast webhook routing by phone number</li>
+                        <li><strong>idx_messages_group_created:</strong> Chronological message queries</li>
+                        <li><strong>idx_profiles_phone_number:</strong> Phone number lookups</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="layers" class="section">
+            <h2>Clean Architecture Layers</h2>
+            <div class="mermaid">
+flowchart TB
+    subgraph Presentation["PRESENTATION LAYER<br/>/src/presentation/"]
+        Components["React Components"]
+        UI["UI Primitives<br/>Button, Input, Avatar"]
+        Chat["Chat Components<br/>ChatView, MessageBubble"]
+        Layout["Layout<br/>AppShell, Navigation"]
+    end
+
+    subgraph Application["APPLICATION LAYER<br/>/src/application/"]
+        Actions["Server Actions<br/>sendMessage()<br/>createGroup()"]
+        Hooks["React Hooks<br/>useRealtimeMessages<br/>useSendMessage"]
+    end
+
+    subgraph Data["DATA LAYER<br/>/src/data/"]
+        Repos["Repositories<br/>MessageRepository<br/>GroupRepository"]
+        Mappers["Mappers<br/>DB Row → Domain"]
+        Clients["Supabase Clients<br/>browser / server / service"]
+    end
+
+    subgraph Domain["DOMAIN LAYER<br/>/src/domain/"]
+        Types["Branded Types<br/>UserId, GroupId, E164PhoneNumber"]
+        Unions["Discriminated Unions<br/>AppOriginMessage | SmsOriginMessage"]
+        Validators["Validators<br/>message length, phone format"]
+    end
+
+    Components --> Actions
+    Components --> Hooks
+    Actions --> Repos
+    Hooks --> Repos
+    Repos --> Mappers
+    Repos --> Clients
+    Mappers --> Types
+    Repos --> Domain
+            </div>
+        </section>
+
+        <section id="tech" class="section">
+            <h2>Technology Stack</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Frontend</h3>
+                    <div class="tech-stack">
+                        <span class="tech-badge frontend">Next.js 15</span>
+                        <span class="tech-badge frontend">React 19</span>
+                        <span class="tech-badge frontend">TypeScript 5.7</span>
+                        <span class="tech-badge frontend">Tailwind CSS</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Backend</h3>
+                    <div class="tech-stack">
+                        <span class="tech-badge backend">Supabase</span>
+                        <span class="tech-badge backend">PostgreSQL 15</span>
+                        <span class="tech-badge backend">Edge Functions</span>
+                        <span class="tech-badge backend">Twilio</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Key Patterns</h3>
+                    <div class="tech-stack">
+                        <span class="tech-badge pattern">Clean Architecture</span>
+                        <span class="tech-badge pattern">Repository Pattern</span>
+                        <span class="tech-badge pattern">Discriminated Unions</span>
+                        <span class="tech-badge pattern">Branded Types</span>
+                        <span class="tech-badge pattern">Row Level Security</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="participants" class="section">
+            <h2>Participant Types Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>App User</th>
+                        <th>SMS Participant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Type Identifier</strong></td>
+                        <td>kind: "app_user"</td>
+                        <td>kind: "sms_participant"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Authentication</strong></td>
+                        <td>Email/password or OAuth</td>
+                        <td>None (phone number only)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creation</strong></td>
+                        <td>Self-signup via auth</td>
+                        <td>Created by app user</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Group Roles</strong></td>
+                        <td>owner / admin / member</td>
+                        <td>always member</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Message Origin</strong></td>
+                        <td>origin: 'app'</td>
+                        <td>origin: 'sms'</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sender Field</strong></td>
+                        <td>sender_user_id</td>
+                        <td>sender_sms_participant_id</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Message Delivery</strong></td>
+                        <td>Realtime WebSocket</td>
+                        <td>Twilio SMS</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UI Experience</strong></td>
+                        <td>Full app interface</td>
+                        <td>Plain SMS: "Name: Message"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h2>Key Files Reference</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Data Layer</h3>
+                    <ul>
+                        <li><strong>Schema:</strong> supabase/migrations/001_initial_schema.sql</li>
+                        <li><strong>Types:</strong> src/data/supabase/database.types.ts</li>
+                        <li><strong>Repositories:</strong> src/data/repositories/</li>
+                        <li><strong>Mappers:</strong> src/data/mappers/</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Domain Layer</h3>
+                    <ul>
+                        <li><strong>Types:</strong> src/domain/types/</li>
+                        <li><strong>Validators:</strong> src/domain/validators/</li>
+                        <li><strong>Branded:</strong> src/domain/types/branded.ts</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Application Layer</h3>
+                    <ul>
+                        <li><strong>Actions:</strong> src/application/actions/</li>
+                        <li><strong>Hooks:</strong> src/application/hooks/</li>
+                        <li><strong>Realtime:</strong> use-realtime-messages.ts</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>API & Functions</h3>
+                    <ul>
+                        <li><strong>SMS API:</strong> src/app/api/send-sms/route.ts</li>
+                        <li><strong>Webhook:</strong> supabase/functions/twilio-webhook/</li>
+                        <li><strong>Status:</strong> supabase/functions/twilio-status/</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#f1f5f9',
+                primaryBorderColor: '#475569',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#334155',
+                background: '#1e293b',
+                mainBkg: '#334155',
+                nodeBorder: '#475569',
+                clusterBkg: '#1e293b',
+                clusterBorder: '#475569',
+                titleColor: '#f1f5f9',
+                edgeLabelBackground: '#1e293b'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                actorMargin: 50,
+                boxMargin: 10
+            }
+        });
+    </script>
+</body>
+</html>
